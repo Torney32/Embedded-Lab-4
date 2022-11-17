@@ -2,26 +2,29 @@
 
 
 /**
- * use wdt timer interrupt process
- * to toggle green led
- * with a 250 ms interval
+ * pwm w/ 10% dc
+ * 500 ms period
+ * polling process
+ * measure results
  *
  * main.c
  */
 int main(void)
 {
-    WDTCTL = WDT_ADLY_250;     // WDT 250ms, SMCLK, interval timer
-    P6OUT &= ~BIT6;
-    P6DIR |= BIT6;
-    PM5CTL0 &= ~LOCKLPM5;
-    SFRIE1 |= WDTIE;
-    _enable_interrupts();
-    while (1);
+    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+        PM5CTL0 &= ~LOCKLPM5;
 
-	return 0;
-}
+        P6DIR |= BIT0;          // P1.0  output
+        P6SEL0 |= BIT0;
+        P6SEL1 &= ~BIT0;
 
-#pragma vector=WDT_VECTOR
-    __interrupt void wdtled(void){
-            P6OUT^=BIT6;
+        //PWM Generator
+        TB3CCR0 = 16384;
+        TB3CCTL1 = OUTMOD_7;
+        TB3CCR1 = 1638;
+        TB3CTL = TBSSEL_1 + MC_1 + TBCLR;
+
+        while(1){
+            P6OUT ^= BIT0;
+        }
     }
